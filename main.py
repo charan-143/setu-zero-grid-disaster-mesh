@@ -302,6 +302,8 @@ class SetuUnifiedSystem:
         if self.enable_server:
             print(f"  [5] Open Incident Command Dashboard (http://localhost:{self.port}/)")
             print(f"  [6] Open Zero-Install Captive PWA (http://localhost:{self.port}/pwa)")
+        else:
+            print(f"  [5] Start Optional Local Web Dashboard (on port {self.port})")
         print("  [q] Quit\n")
 
         if not sys.stdin.isatty():
@@ -332,6 +334,14 @@ class SetuUnifiedSystem:
                 elif cmd == '5' and self.enable_server:
                     webbrowser.open(f"http://localhost:{self.port}/")
                     print(f"Opened http://localhost:{self.port}/")
+                elif cmd == '5' and not self.enable_server:
+                    print(f"\n[*] Starting optional Web Dashboard on port {self.port}...")
+                    self.enable_server = True
+                    self.start_servers()
+                    try:
+                        webbrowser.open(f"http://localhost:{self.port}/")
+                    except Exception:
+                        pass
                 elif cmd == '6' and self.enable_server:
                     webbrowser.open(f"http://localhost:{self.port}/pwa")
                     print(f"Opened http://localhost:{self.port}/pwa")
@@ -440,15 +450,19 @@ class SetuUnifiedSystem:
 def main():
     import argparse
     parser = argparse.ArgumentParser(description="Setu: Zero-Grid Disaster Mesh & Triage Unified Orchestrator")
-    parser.add_argument("--port", type=int, default=8080, help="Unified Station port (default: 8080)")
-    parser.add_argument("--no-server", action="store_true", help="Run 100% serverless peer-to-peer CLI without web server")
-    parser.add_argument("--no-browser", action="store_true", help="Do not automatically open the web browser")
+    parser.add_argument("--port", type=int, default=8080, help="Optional Unified Station port (default: 8080)")
+    parser.add_argument("--server", action="store_true", help="Launch optional local web dashboard (default: False, 100% serverless peer-to-peer)")
+    parser.add_argument("--no-server", action="store_true", help="Run 100% serverless peer-to-peer CLI without web server (default)")
+    parser.add_argument("--no-browser", action="store_true", help="Do not automatically open the web browser when --server is enabled")
     parser.add_argument("--auto", action="store_true", help="Run once in automated mode and exit")
     args = parser.parse_args()
 
+    # Default is 100% serverless peer-to-peer. Server is ONLY enabled if --server is explicitly requested.
+    enable_server = args.server and not args.no_server
+
     system = SetuUnifiedSystem(
         port=args.port,
-        enable_server=not args.no_server,
+        enable_server=enable_server,
         auto_open_browser=not args.no_browser and not args.auto
     )
 
