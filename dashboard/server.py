@@ -30,8 +30,54 @@ class TacticalDashboardHandler(SimpleHTTPRequestHandler):
         self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
         self.end_headers()
 
+    def do_HEAD(self):
+        parsed = urllib.parse.urlparse(self.path)
+        if parsed.path in ("/generate_204", "/hotspot-detect.html", "/ncsi.txt", "/connecttest.txt", "/pwa", "/sos"):
+            from gateway_mule.captive_portal_server import CAPTIVE_PORTAL_HTML
+            self.send_response(200)
+            self.send_header("Content-Type", "text/html; charset=utf-8")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.send_header("Content-Length", str(len(CAPTIVE_PORTAL_HTML.encode('utf-8'))))
+            self.end_headers()
+            return
+        super().do_HEAD()
+
     def do_GET(self):
         parsed = urllib.parse.urlparse(self.path)
+        # Unified Zero-Install Micro-PWA and Captive Portal routes
+        if parsed.path in ("/pwa", "/sos", "/captive", "/generate_204", "/hotspot-detect.html", "/ncsi.txt", "/connecttest.txt"):
+            from gateway_mule.captive_portal_server import CAPTIVE_PORTAL_HTML
+            body_bytes = CAPTIVE_PORTAL_HTML.encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "text/html; charset=utf-8")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
+            self.send_header("Content-Length", str(len(body_bytes)))
+            self.end_headers()
+            self.wfile.write(body_bytes)
+            return
+
+        if parsed.path == "/api/v1/status":
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.end_headers()
+            records = GATEWAY.db.get_all_records()
+            status_payload = {
+                "status": "online",
+                "gateway_device": GATEWAY.device_name,
+                "connected_victims_count": len(records),
+                "spooled_packets_count": len(records),
+                "gateway_telemetry": {
+                    "device_name": GATEWAY.device_name,
+                    "mode": "UNIFIED_ZERO_GRID",
+                    "battery_pct": 95,
+                    "is_gateway": True
+                }
+            }
+            self.wfile.write(json.dumps(status_payload).encode('utf-8'))
+            return
+
         if parsed.path == "/api/v1/vitality_forecast":
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
@@ -223,6 +269,87 @@ class TacticalDashboardHandler(SimpleHTTPRequestHandler):
                 self.send_header("Access-Control-Allow-Origin", "*")
                 self.end_headers()
                 self.wfile.write(json.dumps({"error": f"Invalid packet size {len(raw_data)}, expected 120"}).encode('utf-8'))
+            return
+        elif parsed.path == "/api/v1/captive_sos":
+            content_length = int(self.headers.get('Content-Length', 0))
+            raw_data = self.rfile.read(content_length).decode('utf-8')
+            try:
+                from gateway_mule.captive_portal_server import (
+                    _safe_int, _safe_float, _safe_bool,
+                    MED_FLAG_INSULIN, MED_FLAG_DIALYSIS, MED_FLAG_PREGNANCY,
+                    MED_FLAG_CRUSH, MED_FLAG_SNAKEBITE, MED_FLAG_O2_NEEDED,
+                    MED_FLAG_BLEEDING, MED_FLAG_FRACTURE,
+                    SEVERITY_RED, SEVERITY_YELLOW, SEVERITY_GREEN,
+                    DISASTER_FLOOD, OfflineEmergencyRAG, pack_sos_packet, unpack_sos_packet
+                )
+                data = json.loads(raw_data) if raw_data.strip() else {}
+                flags = 0
+                if _safe_bool(data.get("insulin")) or _safe_bool(data.get("med_insulin")): flags |= MED_FLAG_INSULIN
+                if _safe_bool(data.get("dialysis")) or _safe_bool(data.get("med_dialysis")): flags |= MED_FLAG_DIALYSIS
+                if _safe_bool(data.get("bleeding")) or _safe_bool(data.get("med_bleeding")): flags |= MED_FLAG_BLEEDING
+                if _safe_bool(data.get("crush")) or _safe_bool(data.get("med_crush")): flags |= MED_FLAG_CRUSH
+                if _safe_bool(data.get("fracture")) or _safe_bool(data.get("med_fracture")): flags |= MED_FLAG_FRACTURE
+                if _safe_bool(data.get("pregnancy")) or _safe_bool(data.get("med_pregnant")): flags |= MED_FLAG_PREGNANCY
+                if _safe_bool(data.get("o2")) or _safe_bool(data.get("med_o2")): flags |= MED_FLAG_O2_NEEDED
+                if _safe_bool(data.get("snakebite")) or _safe_bool(data.get("med_snakebite")): flags |= MED_FLAG_SNAKEBITE
+
+                adults = _safe_int(data.get("adults"), default=1, min_val=0, max_val=15)
+                children = _safe_int(data.get("children"), default=0, min_val=0, max_val=15)
+                elderly = _safe_int(data.get("elderly"), default=0, min_val=0, max_val=15)
+                critical_cases = _safe_int(data.get("critical_cases"), default=0, min_val=0, max_val=15)
+                is_trapped = _safe_bool(data.get("is_trapped"), default=False)
+
+                if "severity" in data:
+                    severity = _safe_int(data["severity"], default=SEVERITY_YELLOW, min_val=0, max_val=3)
+                else:
+                    urgent_flags = MED_FLAG_BLEEDING | MED_FLAG_CRUSH | MED_FLAG_DIALYSIS | MED_FLAG_INSULIN
+                    if is_trapped or (flags & urgent_flags) != 0 or critical_cases > 0:
+                        severity = SEVERITY_RED
+                    elif (flags & (MED_FLAG_FRACTURE | MED_FLAG_PREGNANCY | MED_FLAG_O2_NEEDED)) != 0 or elderly > 0:
+                        severity = SEVERITY_YELLOW
+                    else:
+                        severity = SEVERITY_GREEN
+
+                note = str(data.get("note") or data.get("location_notes") or "Captive portal SOS")
+                disaster_type = _safe_int(data.get("disaster_type", DISASTER_FLOOD), default=DISASTER_FLOOD, min_val=0, max_val=6)
+                lat = _safe_float(data.get("latitude"), default=20.2975, min_val=-90.0, max_val=90.0)
+                lon = _safe_float(data.get("longitude"), default=85.8260, min_val=-180.0, max_val=180.0)
+                alt_dm = _safe_int(data.get("altitude_decimeters"), default=0, min_val=-32768, max_val=32767)
+                batt_pct = _safe_int(data.get("battery_pct"), default=85, min_val=0, max_val=100)
+                device_id = str(data.get("device_id") or f"CP_{int(time.time()*1000)%1000000:06d}")
+
+                raw_pkt = pack_sos_packet(
+                    device_id=device_id, timestamp=int(time.time()),
+                    latitude=lat, longitude=lon, altitude_decimeters=alt_dm,
+                    severity=severity, disaster_type=disaster_type, is_trapped=is_trapped,
+                    mobility=0 if is_trapped else 1, adults=adults, children=children,
+                    elderly=elderly, critical_cases=critical_cases, hop_count=5,
+                    battery_pct=batt_pct, medical_flags=flags, note=note
+                )
+                GATEWAY.ingest_raw_packet(raw_pkt, channel="HOTSPOT_CAPTIVE_PORTAL")
+
+                unpacked = unpack_sos_packet(raw_pkt)
+                rag = OfflineEmergencyRAG()
+                guidance_text = rag.get_relief_response(note or unpacked["disaster_label"], lang="en")
+
+                resp_payload = {
+                    "success": True,
+                    "packet_hash": f"{unpacked['device_hash']}_{unpacked['timestamp']}",
+                    "severity": unpacked["severity_label"],
+                    "first_aid_guidance": guidance_text,
+                    "triage_summary": f"Triage Priority: {unpacked['severity_label']} | Headcount: {adults+children+elderly}"
+                }
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Access-Control-Allow-Origin", "*")
+                self.end_headers()
+                self.wfile.write(json.dumps(resp_payload).encode('utf-8'))
+            except Exception as e:
+                self.send_response(400)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Access-Control-Allow-Origin", "*")
+                self.end_headers()
+                self.wfile.write(json.dumps({"error": str(e)}).encode('utf-8'))
             return
 
         self.send_response(404)

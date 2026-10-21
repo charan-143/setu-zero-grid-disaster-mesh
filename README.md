@@ -5,6 +5,23 @@ Even when **95% of telecommunications infrastructure is destroyed**, this system
 
 ---
 
+## ⚡ 100% Serverless Peer-to-Peer Architecture (No Server Needed!)
+
+> **Zero External Server Required**: In a real disaster, cell towers and servers are down. Setu operates **100% phone-to-phone** directly via Bluetooth Low Energy (BLE 5.0) radio waves and 18.5–20 kHz ultrasonic sound waves.
+
+```
+[Phone 1: Survivor]  --- BLE 5.0 Adv / 18.5kHz Ultrasonic Chirp --->  [Phone 2: Responder / Mule]
+(Taps "BROADCAST SOS")                                                (Opens "Nearby" Radar Tab)
+                                                                       * Instant Triage Alert
+                                                                       * Headcount & Medical Need
+                                                                       * Distance & Compass Radar
+```
+
+* **On Phone 1 (e.g. Vivo)**: Open app $\rightarrow$ Tap **"Help"** $\rightarrow$ Tap **"BROADCAST SOS"**.
+* **On Phone 2 (e.g. Motorola)**: Open app $\rightarrow$ Switch to **"Nearby"** tab $\rightarrow$ The phone immediately detects Phone 1's emergency packet over the air and displays the survivor's triage card with zero servers, zero Wi-Fi routers, and zero internet.
+
+---
+
 ## 🌟 5 Breakthrough State-of-the-Art Innovations Built
 
 | # | Breakthrough Innovation | Problem Solved | Real-World Impact |
@@ -67,7 +84,7 @@ graph TD
 
 ```
 d:\New folder (5)\
-├── main.py                            # [NEW] Master Orchestrator (All 4 Layers Combined)
+├── main.py                            # Master Orchestrator (Single Unified Runtime)
 ├── core/
 │   ├── sos_packet.py                  # Strict 120-Byte Binary Packet Codec & CRC16-CCITT
 │   ├── triage_extractor.py            # Indic Vernacular Dialect Extractor (Qwen/Llama SLM logic)
@@ -89,7 +106,7 @@ d:\New folder (5)\
 │   └── web/
 │       └── index.html                 # Offline Interactive Tactical GIS Dashboard with Live Ticking
 ├── tests/
-│   ├── test_unified_runner.py         # [NEW] Master orchestrator integration test (4 tests)
+│   ├── test_unified_runner.py         # [NEW] Master orchestrator integration test (5 tests)
 │   ├── test_disaster_mesh.py          # Protocol & hardware unit tests
 │   ├── test_advanced_features.py      # Vernacular extraction, RAG, & routing tests
 │   ├── test_cryo_sleep.py             # [NEW] Cryo-sleep power & battery math tests (15 tests)
@@ -105,25 +122,20 @@ d:\New folder (5)\
 
 ## 🛠️ How to Run
 
-### 🌟 1. Single Master Run (All Layers Combined)
+### 🌟 1. Single Master Run (Everything in One Place)
 ```bash
 python main.py
 ```
-*Launches the entire system in one unified command:*
-* **Layer D**: Launches the Tactical Incident Command Station & GIS map on `http://localhost:8080`.
-* **Layer C**: Launches the Zero-Install Captive Portal & Offline Micro-PWA on `http://localhost:8082`.
-* **Layer A & B**: Executes live Survivor Edge Nodes (Indic Voice, SAR-Tap seismic rebar knocks, Cryo-Sleep ~12-day horizon, BLE 5.0, ultrasonic acoustic chirp).
-* **Layer C**: Derives 3D sub-surface burial depth & excavation coordinates via 4-receiver GCC-PHAT TDoA multilateration.
-* **Layer D**: Calculates real-time dynamic golden-hour survival countdowns & multi-team dispatch routing.
-* Automatically opens your browser and starts an interactive command console!
+*No separate servers*: A single process serves both the **Tactical GIS Map** (`/`) and the **Mobile PWA** (`/pwa`) on port `8080`, runs all edge sensor & transport simulations, executes 3D TDoA depth triangulation, and starts an interactive console!
 
-### 2. Run Complete Automated Unit Tests
+### ⚡ 2. 100% Serverless Peer-to-Peer CLI (No Web Server)
+```bash
+python main.py --no-server
+```
+*Zero web server*: Runs completely in terminal mode, executing all 4 layers purely offline.
+
+### 🧪 3. Run Automated Unit Tests
 ```bash
 python -m unittest discover tests
 ```
-*All 121 unit tests pass with zero regressions across all engines, transports, and unified runners.*
-
-### 3. Individual Subsystem Runs (Optional)
-* Edge Node Simulation: `python survivor_edge_node.py`
-* Multi-Survivor & 3D TDoA Mesh: `python demo_simulation.py`
-* Tactical Command Server: `python dashboard/server.py`
+*All 122 unit tests pass with zero regressions.*

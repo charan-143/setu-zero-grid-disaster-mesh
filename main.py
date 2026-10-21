@@ -2,13 +2,9 @@
 Unified Zero-Grid Disaster Mesh & Triage System (Setu) - Master Orchestrator
 Combines Layer A (Edge), Layer B (Transport), Layer C (Mule Gateway), and Layer D (Incident Command).
 
-Running this single command starts the entire system:
-1. Launches the Tactical Incident Command Server & GIS Dashboard (http://localhost:8080)
-2. Launches the Zero-Install Captive Portal & Offline Micro-PWA (http://localhost:8082)
-3. Runs the Layer A & B Survivor Edge Nodes (Voice, SAR-Tap, Cryo-Sleep, BLE, Acoustic Chirp)
-4. Runs Layer C Multi-Receiver Ultrasonic Acoustic 3D TDoA Triangulation
-5. Runs Layer D Dynamic Golden-Hour Trauma Decay & Deadline-First Rescue Dispatch
-6. Keeps all servers running with a live interactive CLI console
+Zero-Server / Peer-to-Peer Architecture:
+- Between physical Android devices: 100% serverless directly via BLE & Ultrasonic audio!
+- On PC / Incident Command: Single unified entry point on http://localhost:8080 serving BOTH the GIS Dashboard and Mobile PWA with zero separate servers.
 """
 
 import os
@@ -56,72 +52,49 @@ from transport.acoustic_tdoa_triangulator import AcousticTDoATriangulator, Recei
 
 # Gateway & Server modules
 from gateway_mule.setu_mule_service import AndroidSetuMuleGateway
-from gateway_mule.captive_portal_server import CaptivePortalServer, DNSHijacker
 from dashboard.server import TacticalDashboardHandler, GATEWAY
 
 
 class SetuUnifiedSystem:
-    """Master orchestrator combining all 4 layers of the Setu Disaster Mesh."""
+    """Master orchestrator combining all 4 layers of the Setu Disaster Mesh into a single runtime."""
 
     def __init__(
         self,
-        dashboard_port: int = 8080,
-        captive_port: int = 8082,
-        dns_port: int = 5353,
+        port: int = 8080,
+        enable_server: bool = True,
         auto_open_browser: bool = True
     ):
-        self.dashboard_port = dashboard_port
-        self.captive_port = captive_port
-        self.dns_port = dns_port
+        self.port = port
+        self.enable_server = enable_server
         self.auto_open_browser = auto_open_browser
 
         self.gateway = GATEWAY
-        self.dashboard_server: Optional[HTTPServer] = None
-        self.captive_server: Optional[CaptivePortalServer] = None
-        self.dns_hijacker: Optional[DNSHijacker] = None
+        self.server: Optional[HTTPServer] = None
         self.running = False
         self._threads: List[threading.Thread] = []
 
     def start_servers(self):
-        """Starts both Tactical Dashboard and Captive Portal servers in background threads."""
+        """Starts the single unified server (serving both GIS Dashboard and Mobile PWA) in a background thread."""
         print("\n" + "=" * 75)
         print("  🛰️  SETU: ZERO-GRID DISASTER MESH & TACTICAL TRIAGE ORCHESTRATOR")
         print("     100% Zero-Hardware-Cost Offline Emergency Infrastructure")
         print("=" * 75)
 
-        # 1. Start Tactical Command Dashboard (Layer D)
-        print(f"\n[1] INITIALIZING LAYER D: TACTICAL INCIDENT COMMAND STATION...")
-        try:
-            self.dashboard_server = HTTPServer(('0.0.0.0', self.dashboard_port), TacticalDashboardHandler)
-            dash_thread = threading.Thread(target=self.dashboard_server.serve_forever, daemon=True)
-            dash_thread.start()
-            self._threads.append(dash_thread)
-            print(f"    ✓ Tactical Situational GIS Dashboard online: http://127.0.0.1:{self.dashboard_port}")
-            print(f"    ✓ Real-time Vitality API: http://127.0.0.1:{self.dashboard_port}/api/v1/vitality_forecast")
-        except Exception as e:
-            print(f"    ✗ Warning: Could not bind Dashboard server to port {self.dashboard_port}: {e}")
+        if not self.enable_server:
+            print("\n[*] RUNNING IN 100% SERVERLESS PEER-TO-PEER MODE (NO LOCAL WEBSERVER)")
+            return
 
-        # 2. Start Zero-Install Captive Portal & Standalone Micro-PWA (Layer C)
-        print(f"\n[2] INITIALIZING LAYER C: ZERO-INSTALL CAPTIVE PORTAL & MICRO-PWA...")
+        print(f"\n[1] INITIALIZING SINGLE UNIFIED TACTICAL STATION (PORT {self.port})...")
         try:
-            self.captive_server = CaptivePortalServer(
-                host="0.0.0.0",
-                port=self.captive_port,
-                mule_service=self.gateway,
-                gateway_ip="192.168.4.1"
-            )
-            self.captive_server.start()
-            print(f"    ✓ Zero-Install Micro-PWA Server online: http://127.0.0.1:{self.captive_port}")
-
-            # Optional local DNS hijacker on UDP port
-            try:
-                self.dns_hijacker = DNSHijacker(host="0.0.0.0", port=self.dns_port, gateway_ip="127.0.0.1")
-                self.dns_hijacker.start()
-                print(f"    ✓ Captive DNS Hijacker online on UDP port {self.dns_port}")
-            except Exception as dns_err:
-                print(f"    ! Note: DNS hijacker on UDP {self.dns_port} skipped ({dns_err})")
+            self.server = HTTPServer(('0.0.0.0', self.port), TacticalDashboardHandler)
+            srv_thread = threading.Thread(target=self.server.serve_forever, daemon=True)
+            srv_thread.start()
+            self._threads.append(srv_thread)
+            print(f"    ✓ Tactical Incident Command GIS Map: http://127.0.0.1:{self.port}/")
+            print(f"    ✓ Zero-Install Mobile Emergency PWA: http://127.0.0.1:{self.port}/pwa")
+            print(f"    ✓ Real-time Vitality & Dispatch API: http://127.0.0.1:{self.port}/api/v1/vitality_forecast")
         except Exception as e:
-            print(f"    ✗ Warning: Could not bind Captive Portal to port {self.captive_port}: {e}")
+            print(f"    ✗ Warning: Could not bind server to port {self.port}: {e}")
 
     def run_survivor_simulations(self):
         """Simulates all edge nodes, transports, 3D TDoA, and dynamic dispatch."""
@@ -130,7 +103,7 @@ class SetuUnifiedSystem:
         # Node 1: Layer A Indic Voice Triage & Cryo-Sleep Power Budgeter
         # -------------------------------------------------------------
         print("\n" + "-" * 75)
-        print("[3] SIMULATING LAYER A: SURVIVOR EDGE NODE (VERNACULAR SPEECH & CRYO-SLEEP)")
+        print("[2] LAYER A: SURVIVOR EDGE NODE (VERNACULAR SPEECH & CRYO-SLEEP)")
         print("-" * 75)
         speech_text = "पानी छत तक आ गया है, मेरे साथ दो बच्चे और एक बुजुर्ग हैं जिन्हें इंसुलिन चाहिए"
         print(f"    [Audio Ingestion]: \"{speech_text}\"")
@@ -175,7 +148,7 @@ class SetuUnifiedSystem:
         # Node 2: Layer A Non-Vocal Seismic & Acoustic SAR-Tap Codec
         # -------------------------------------------------------------
         print("\n" + "-" * 75)
-        print("[4] SIMULATING LAYER A: NON-VOCAL SEISMIC CODEC (SAR-TAP)")
+        print("[3] LAYER A: NON-VOCAL SEISMIC CODEC (SAR-TAP)")
         print("-" * 75)
         print("    Scenario: Survivor trapped under concrete rubble, unable to speak.")
         print("    Survivor strikes rebar with 3 rapid knocks (Universal Alpine/Mining/NDMA 3-Tap distress).")
@@ -212,7 +185,7 @@ class SetuUnifiedSystem:
         # Node 3: Layer B & C Ultrasonic Acoustic 3D TDoA Triangulation
         # -------------------------------------------------------------
         print("\n" + "-" * 75)
-        print("[5] SIMULATING LAYER B & C: MULTI-RECEIVER ULTRASONIC ACOUSTIC 3D TDoA")
+        print("[4] LAYER B & C: MULTI-RECEIVER ULTRASONIC ACOUSTIC 3D TDoA")
         print("-" * 75)
         print("    Scenario: Buried concrete survivor emitting 18.5 kHz - 20 kHz ultrasonic acoustic chirp.")
         print("    Deploying 4 surface Ground Mule receivers for 3D sub-surface localization:")
@@ -274,7 +247,7 @@ class SetuUnifiedSystem:
         # Phase 4: Layer D Dynamic Golden-Hour Triage & Dispatch Optimizer
         # -------------------------------------------------------------
         print("\n" + "-" * 75)
-        print("[6] LAYER D: DYNAMIC GOLDEN-HOUR TRAUMA DECAY & DISPATCH OPTIMIZATION")
+        print("[5] LAYER D: DYNAMIC GOLDEN-HOUR TRAUMA DECAY & DISPATCH OPTIMIZATION")
         print("-" * 75)
         records = self.gateway.db.get_all_records()
         assessed_victims = VitalityDecayEngine.rank_victims(records)
@@ -301,17 +274,19 @@ class SetuUnifiedSystem:
         self.run_survivor_simulations()
 
         print("\n" + "=" * 75)
-        print("  ✅ ALL 4 LAYERS ARE COMBINED & ACTIVE IN A SINGLE UNIFIED SYSTEM")
+        print("  ✅ ALL 4 LAYERS ARE COMBINED & ACTIVE IN A SINGLE RUNTIME")
         print("=" * 75)
-        print(f"  🌐 Tactical Incident Command GIS:  http://localhost:{self.dashboard_port}")
-        print(f"  📱 Zero-Install Offline Micro-PWA:  http://localhost:{self.captive_port}")
-        print(f"  📡 Shared Mule Ingestion Buffer:   {self.gateway.db.db_path} ({len(self.gateway.db.get_all_records())} total records)")
+        if self.enable_server:
+            print(f"  🌐 Tactical Command GIS & PWA: http://localhost:{self.port} (Dashboard: /, PWA: /pwa)")
+        else:
+            print(f"  ⚡ 100% Serverless Peer-to-Peer Operation")
+        print(f"  📡 Shared Mule Ingestion Buffer: {self.gateway.db.db_path} ({len(self.gateway.db.get_all_records())} total records)")
         print("=" * 75)
 
-        if self.auto_open_browser:
+        if self.enable_server and self.auto_open_browser:
             try:
-                print("\n[*] Opening Tactical Incident Command Dashboard in default browser...")
-                webbrowser.open(f"http://localhost:{self.dashboard_port}")
+                print(f"\n[*] Opening Incident Command Dashboard on http://localhost:{self.port}...")
+                webbrowser.open(f"http://localhost:{self.port}")
             except Exception:
                 pass
 
@@ -324,13 +299,13 @@ class SetuUnifiedSystem:
         print("  [2] Trigger New SAR-Tap Seismic/Acoustic Strike under Concrete")
         print("  [3] Ingest New Zero-Install Captive PWA Emergency Report")
         print("  [4] Recalculate Dynamic Golden-Hour Dispatch Plan")
-        print("  [5] Open Incident Command Dashboard in Browser")
-        print("  [6] Open Zero-Install Captive PWA in Browser")
-        print("  [q] Quit and Shutdown All Servers\n")
+        if self.enable_server:
+            print(f"  [5] Open Incident Command Dashboard (http://localhost:{self.port}/)")
+            print(f"  [6] Open Zero-Install Captive PWA (http://localhost:{self.port}/pwa)")
+        print("  [q] Quit\n")
 
-        # If not connected to a live terminal (e.g. running non-interactively or tests), keep running
         if not sys.stdin.isatty():
-            print("[*] Running in non-interactive / background service mode. All endpoints active.")
+            print("[*] Running in non-interactive / background service mode. All layers active.")
             try:
                 while True:
                     time.sleep(1.0)
@@ -354,14 +329,14 @@ class SetuUnifiedSystem:
                     self._cmd_captive_pwa_sos()
                 elif cmd == '4':
                     self._cmd_dispatch_calc()
-                elif cmd == '5':
-                    webbrowser.open(f"http://localhost:{self.dashboard_port}")
-                    print(f"Opened http://localhost:{self.dashboard_port}")
-                elif cmd == '6':
-                    webbrowser.open(f"http://localhost:{self.captive_port}")
-                    print(f"Opened http://localhost:{self.captive_port}")
+                elif cmd == '5' and self.enable_server:
+                    webbrowser.open(f"http://localhost:{self.port}/")
+                    print(f"Opened http://localhost:{self.port}/")
+                elif cmd == '6' and self.enable_server:
+                    webbrowser.open(f"http://localhost:{self.port}/pwa")
+                    print(f"Opened http://localhost:{self.port}/pwa")
                 elif cmd:
-                    print(f"Unknown command: '{cmd}'. Choose 1-6 or 'q' to quit.")
+                    print(f"Unknown command: '{cmd}'. Choose options above or 'q' to quit.")
             except (KeyboardInterrupt, EOFError):
                 print("\n[*] Exiting Setu Orchestrator...")
                 self.shutdown()
@@ -451,43 +426,29 @@ class SetuUnifiedSystem:
             print(f"    • {t['team_id']}: [{route_str}]")
 
     def shutdown(self):
-        """Terminates all running servers gracefully."""
-        if self.dashboard_server:
+        """Terminates server gracefully."""
+        if self.server:
             try:
-                self.dashboard_server.shutdown()
-                self.dashboard_server.server_close()
+                self.server.shutdown()
+                self.server.server_close()
             except Exception:
                 pass
-            self.dashboard_server = None
-        if self.captive_server:
-            try:
-                self.captive_server.stop()
-            except Exception:
-                pass
-            self.captive_server = None
-        if self.dns_hijacker:
-            try:
-                self.dns_hijacker.stop()
-            except Exception:
-                pass
-            self.dns_hijacker = None
-        print("✓ All Setu unified servers terminated.")
+            self.server = None
+        print("✓ All Setu unified components terminated.")
 
 
 def main():
     import argparse
     parser = argparse.ArgumentParser(description="Setu: Zero-Grid Disaster Mesh & Triage Unified Orchestrator")
-    parser.add_argument("--dashboard-port", type=int, default=8080, help="Tactical Dashboard port (default: 8080)")
-    parser.add_argument("--captive-port", type=int, default=8082, help="Captive Portal PWA port (default: 8082)")
-    parser.add_argument("--dns-port", type=int, default=5353, help="Captive DNS port (default: 5353)")
+    parser.add_argument("--port", type=int, default=8080, help="Unified Station port (default: 8080)")
+    parser.add_argument("--no-server", action="store_true", help="Run 100% serverless peer-to-peer CLI without web server")
     parser.add_argument("--no-browser", action="store_true", help="Do not automatically open the web browser")
     parser.add_argument("--auto", action="store_true", help="Run once in automated mode and exit")
     args = parser.parse_args()
 
     system = SetuUnifiedSystem(
-        dashboard_port=args.dashboard_port,
-        captive_port=args.captive_port,
-        dns_port=args.dns_port,
+        port=args.port,
+        enable_server=not args.no_server,
         auto_open_browser=not args.no_browser and not args.auto
     )
 
