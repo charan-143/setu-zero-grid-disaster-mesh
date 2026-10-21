@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#101716">
+  <title>SETU · Incident Command</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    :root{color-scheme:dark;--bg:#101716;--panel:#18211f;--panel2:#202b28;--line:#303d38;--text:#edf2e9;--muted:#9aa99f;--soft:#74827a;--mint:#9de4b1;--red:#ff746c;--amber:#f2c36b;--green:#80d6a0;--slate:#9ca9a1;--radius:16px;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);min-height:100vh}button,input{font:inherit}button{cursor:pointer;color:inherit}.app{min-height:100vh;display:grid;grid-template-rows:auto auto 1fr}.topbar{height:70px;padding:0 26px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);background:#141c1a;gap:20px}.brand{display:flex;align-items:center;gap:12px}.logo{width:36px;height:36px;border-radius:12px;background:var(--mint);color:#15231c;display:grid;place-items:center;font-weight:900;letter-spacing:-1px}.brand-name{font-weight:750;letter-spacing:.04em}.brand-sub{font-size:12px;color:var(--muted);margin-top:2px}.top-actions{display:flex;align-items:center;gap:10px}.online{display:flex;align-items:center;gap:8px;border:1px solid #355445;background:#1a3025;color:#b7e9c4;padding:8px 12px;border-radius:999px;font-size:12px}.dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 10px #80d6a066}.icon-btn,.btn{border:1px solid var(--line);background:var(--panel2);border-radius:10px;padding:9px 12px;font-weight:650;font-size:13px}.btn:hover,.icon-btn:hover{border-color:#5b7165}.btn-primary{background:var(--mint);border-color:var(--mint);color:#122219}.btn-primary:hover{background:#b1edc2}.metrics{display:grid;grid-template-columns:repeat(5,minmax(130px,1fr));gap:1px;background:var(--line);border-bottom:1px solid var(--line)}.metric{background:var(--panel);padding:15px 22px;position:relative}.metric-label{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:650}.metric-value{font-size:27px;line-height:1.2;font-weight:750;margin-top:6px;font-variant-numeric:tabular-nums}.metric-hint{font-size:11px;color:var(--soft);margin-top:3px}.metric-mark{position:absolute;right:20px;top:17px;width:8px;height:8px;border-radius:50%;background:var(--mint)}.workspace{display:grid;grid-template-columns:minmax(0,1fr) 390px;min-height:0}.map-column{padding:20px;display:flex;flex-direction:column;min-height:650px;gap:12px}.map-heading{display:flex;justify-content:space-between;align-items:center;gap:12px}.eyebrow{font-size:11px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;font-weight:700}.map-heading h1{font-size:19px;margin:4px 0 0;letter-spacing:-.025em}.map-tools{display:flex;gap:8px;align-items:center}.map-frame{position:relative;flex:1;min-height:520px;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:#dfe7dc}.map-frame #map{height:100%;min-height:520px}.map-overlay{position:absolute;z-index:500;top:14px;left:14px;display:flex;gap:8px;pointer-events:none}.map-chip{border:1px solid #ffffff25;background:#18211fe8;backdrop-filter:blur(10px);padding:8px 10px;border-radius:10px;font-size:11px;color:#e9f0e9;box-shadow:0 8px 20px #0002}.map-chip b{color:var(--mint);font-weight:700}.legend{position:absolute;z-index:500;bottom:16px;left:16px;display:flex;gap:14px;background:#18211fe8;padding:10px 12px;border:1px solid #ffffff25;border-radius:11px;font-size:11px;color:#e9f0e9;backdrop-filter:blur(10px)}.legend span{display:flex;align-items:center;gap:6px}.legend i{width:8px;height:8px;border-radius:50%;display:inline-block}.flood-control{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--muted)}input[type=range]{accent-color:var(--mint);width:100px}.sidebar{border-left:1px solid var(--line);background:#151d1b;display:flex;flex-direction:column;min-height:0}.queue-head{padding:20px 18px 14px;border-bottom:1px solid var(--line)}.queue-title{display:flex;align-items:center;justify-content:space-between}.queue-title h2{font-size:14px;margin:0;letter-spacing:.02em}.count{font-size:11px;color:var(--muted);background:var(--panel2);padding:4px 8px;border-radius:999px}.queue-sub{font-size:11px;color:var(--muted);margin-top:6px}.search{margin-top:14px;position:relative}.search input{width:100%;border:1px solid var(--line);background:#101715;border-radius:10px;color:var(--text);padding:10px 12px 10px 34px;outline:none}.search input:focus{border-color:#789784;box-shadow:0 0 0 3px #9de4b11a}.search:before{content:'⌕';position:absolute;left:12px;top:5px;font-size:20px;color:var(--muted)}.filters{display:flex;gap:6px;margin-top:10px;overflow-x:auto}.filter{white-space:nowrap;font-size:11px;border:1px solid var(--line);border-radius:999px;padding:6px 9px;background:transparent;color:var(--muted)}.filter.active{color:#18211c;background:var(--mint);border-color:var(--mint);font-weight:700}.queue-list{padding:12px;display:flex;flex-direction:column;gap:9px;overflow:auto;flex:1}.triage-card{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--slate);border-radius:12px;padding:12px;transition:transform .16s,border-color .16s;cursor:pointer}.triage-card:hover{transform:translateY(-1px);border-color:#63776b}.triage-card.sev-2{border-left-color:var(--red)}.triage-card.sev-1{border-left-color:var(--amber)}.triage-card.sev-0{border-left-color:var(--green)}.triage-card.sev-3{border-left-color:var(--slate)}.card-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}.badge{font-size:10px;font-weight:750;letter-spacing:.06em;text-transform:uppercase;padding:4px 7px;border-radius:6px;background:#303b36;color:var(--slate)}.badge-red{background:#442725;color:#ff9b92}.badge-yellow{background:#40351f;color:#f5d18a}.badge-green{background:#203c2c;color:#a4e2b4}.card-meta{font-size:11px;color:var(--muted)}.card-place{font-size:13px;font-weight:700}.card-note{font-size:12px;color:#bfcbc1;margin-top:6px;line-height:1.45}.med-flags{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}.med-tag{font-size:9px;letter-spacing:.05em;font-weight:700;background:#2a3732;color:#c2d0c6;padding:4px 6px;border-radius:5px}.med-tag.urgent{background:#482925;color:#ffaaa0}.card-foot{display:flex;justify-content:space-between;margin-top:9px;font-size:10px;color:var(--soft)}.empty{padding:34px 18px;text-align:center;color:var(--muted);font-size:13px;line-height:1.6}.leaflet-popup-content-wrapper,.leaflet-popup-tip{background:#18211f;color:var(--text)}.leaflet-popup-content{margin:13px}.leaflet-container a{color:var(--mint)}.leaflet-control-attribution{font-size:9px!important}.toast{position:fixed;z-index:1000;left:50%;bottom:22px;transform:translate(-50%,20px);opacity:0;transition:.2s;background:#1e2a25;border:1px solid #40574b;padding:11px 15px;border-radius:10px;box-shadow:0 10px 35px #0005;font-size:13px;pointer-events:none}.toast.show{opacity:1;transform:translate(-50%,0)}.modal-backdrop{position:fixed;z-index:1200;inset:0;background:#080d0bc9;display:none;place-items:center;padding:20px}.modal-backdrop.open{display:grid}.modal{width:min(560px,100%);max-height:80vh;overflow:auto;background:#18211f;border:1px solid var(--line);border-radius:18px;box-shadow:0 24px 80px #0008}.modal-head{padding:18px 20px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line)}.modal-head h2{font-size:16px;margin:0}.modal-body{padding:18px 20px}.mission{padding:12px 0;border-bottom:1px solid var(--line);display:grid;grid-template-columns:32px 1fr auto;gap:10px;align-items:center}.mission:last-child{border-bottom:0}.mission-number{width:28px;height:28px;border-radius:9px;background:#27372e;color:var(--mint);display:grid;place-items:center;font-weight:750}.mission-title{font-size:13px;font-weight:700}.mission-sub{font-size:11px;color:var(--muted);margin-top:3px}.mission-distance{font-size:11px;color:var(--muted)}
+    @keyframes pulseCritical{0%{box-shadow:0 0 0 0 rgba(255,116,108,.7);border-color:#ff746c}50%{box-shadow:0 0 14px 4px rgba(255,40,40,.85);border-color:#ff2a1a}100%{box-shadow:0 0 0 0 rgba(255,116,108,.7);border-color:#ff746c}}
+    .pulse-critical{animation:pulseCritical 1.2s infinite!important;border-left-color:#ff3322!important}
+    .vitality-timer{display:inline-flex;align-items:center;gap:4px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:10px;font-weight:750;padding:2px 7px;border-radius:6px;letter-spacing:.02em}
+    .timer-green{background:#183624;color:#a4e2b4;border:1px solid #306041}
+    .timer-yellow{background:#382d16;color:#f5d18a;border:1px solid #635022}
+    .timer-red{background:#441f1c;color:#ff9b92;border:1px solid #782e28}
+    .timer-pulse{background:#591310;color:#fff;border:1px solid #ff3b2a;animation:pulseCritical 1.2s infinite}
+    .timer-expectant{background:#232926;color:#85938a;border:1px solid #38423d}
+    .vitality-bar-wrap{width:100%;height:4px;background:#24322c;border-radius:999px;margin-top:7px;overflow:hidden}
+    .vitality-bar{height:100%;border-radius:999px;transition:width .4s ease,background-color .4s ease}
+    @media(max-width:1050px){.workspace{grid-template-columns:minmax(0,1fr) 340px}.topbar{padding:0 18px}.brand-sub{display:none}.metric{padding:13px 16px}}
+    @media(max-width:760px){.app{grid-template-rows:auto auto 1fr}.topbar{height:auto;min-height:64px;padding:12px 14px;flex-wrap:wrap}.top-actions{gap:6px}.online{font-size:0;padding:9px}.online span:last-child{display:none}.btn,.icon-btn{padding:8px 10px}.metrics{grid-template-columns:repeat(2,1fr)}.metric{padding:12px 14px}.metric-value{font-size:22px}.metric:last-child{display:none}.workspace{display:flex;flex-direction:column}.map-column{padding:14px;min-height:480px}.map-frame,.map-frame #map{min-height:390px}.map-heading{align-items:flex-start;flex-direction:column}.map-tools{width:100%;justify-content:space-between}.sidebar{border-left:0;border-top:1px solid var(--line);min-height:430px}.queue-list{max-height:480px}.legend{gap:9px;font-size:10px;left:10px;bottom:10px}.map-overlay{left:10px;top:10px}.flood-control{gap:6px}.flood-control input{width:72px}}
+  </style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="brand"><div class="logo">S</div><div><div class="brand-name">SETU COMMAND</div><div class="brand-sub">Incident response · Zero-grid triage mesh</div></div></div>
+    <div class="top-actions"><div class="online" title="Gateway connection status"><i class="dot"></i><span>Gateway connected</span></div><span id="last-updated" class="brand-sub">Connecting…</span><button class="icon-btn" id="refresh-btn" type="button" title="Refresh data">↻ <span class="refresh-label">Refresh</span></button><button class="btn btn-primary" id="dispatch-btn" type="button">Plan dispatch <span aria-hidden="true">↗</span></button></div>
+  </header>
+  <section class="metrics" aria-label="Incident overview">
+    <div class="metric"><i class="metric-mark"></i><div class="metric-label">SOS reports</div><div class="metric-value" id="m-total">—</div><div class="metric-hint">Buffered survivor alerts</div></div>
+    <div class="metric"><i class="metric-mark" style="background:var(--red)"></i><div class="metric-label">Immediate</div><div class="metric-value" style="color:var(--red)" id="m-critical">—</div><div class="metric-hint">Red · highest urgency</div></div>
+    <div class="metric"><i class="metric-mark" style="background:var(--amber)"></i><div class="metric-label">Delayed</div><div class="metric-value" style="color:var(--amber)" id="m-delayed">—</div><div class="metric-hint">Yellow · needs assistance</div></div>
+    <div class="metric"><i class="metric-mark" style="background:var(--green)"></i><div class="metric-label">People reported</div><div class="metric-value" id="m-headcount">—</div><div class="metric-hint"><span id="m-trapped">—</span> trapped under debris</div></div>
+    <div class="metric"><i class="metric-mark" style="background:#86c6d7"></i><div class="metric-label">Minor · expectant</div><div class="metric-value"><span id="m-minor">—</span><span style="color:var(--soft);font-size:18px"> · </span><span id="m-expectant" style="color:var(--slate)">—</span></div><div class="metric-hint">Green · Black</div></div>
+  </section>
+  <main class="workspace">
+    <section class="map-column">
+      <div class="map-heading"><div><div class="eyebrow">Live operational picture</div><h1>Rescue locations & terrain</h1></div><div class="map-tools"><label class="flood-control" for="water-slider">Water level <strong id="water-label" style="color:var(--text)">24 m</strong><input id="water-slider" type="range" min="15" max="35" value="24" step="1"></label><button class="icon-btn" id="flood-btn" type="button" aria-pressed="true">Flood layer on</button></div></div>
+      <div class="map-frame"><div id="map" role="application" aria-label="Map of survivor SOS reports"></div><div class="map-overlay"><div class="map-chip">INCIDENT AREA <b>· ODISHA</b></div><div class="map-chip" id="map-count">0 locations</div></div><div class="legend"><span><i style="background:var(--red)"></i>Immediate</span><span><i style="background:var(--amber)"></i>Delayed</span><span><i style="background:var(--green)"></i>Minor</span><span><i style="background:var(--slate)"></i>Expectant</span></div></div>
+    </section>
+    <aside class="sidebar" aria-label="Priority rescue queue">
+      <div class="queue-head"><div class="queue-title"><h2>Priority rescue queue</h2><span class="count" id="queue-count">0 reports</span></div><div class="queue-sub">Sorted by triage urgency and battery</div><label class="search"><input id="search" type="search" placeholder="Search reports, notes, medical needs…" aria-label="Search reports"></label><div class="filters" role="group" aria-label="Filter reports"><button class="filter active" data-filter="all">All</button><button class="filter" data-filter="2">Immediate</button><button class="filter" data-filter="1">Delayed</button><button class="filter" data-filter="0">Minor</button><button class="filter" data-filter="trapped">Trapped</button></div></div>
+      <div class="queue-list" id="queue-container" aria-live="polite"><div class="empty">Loading incident reports…</div></div>
+    </aside>
+  </main>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<div class="modal-backdrop" id="mission-modal" role="dialog" aria-modal="true" aria-labelledby="mission-title"><div class="modal"><div class="modal-head"><div><div class="eyebrow">Route recommendation</div><h2 id="mission-title">Dispatch plan</h2></div><button class="icon-btn" id="close-modal" aria-label="Close dispatch plan">✕</button></div><div class="modal-body" id="mission-body"></div></div></div>
+<script>
+  let map, markersLayer, routePolyline, floodContoursLayer;
+  let allPackets = [], activeFilter = 'all', refreshTimer, toastTimer, floodRequest, countdownTimer;
+  const severityColors = {2:'#e45e57',1:'#d79c3c',0:'#4c9a68',3:'#65736c'};
+  const $ = id => document.getElementById(id);
+
+  function formatSeconds(sec){
+    if(sec <= 0) return '00:00:00';
+    const s = Math.max(0, Math.round(sec));
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    const r = s % 60;
+    return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(r).padStart(2,'0')}`;
+  }
+
+  function getVitalityStyle(p){
+    const state = p.survival_state || 'STABLE';
+    const vit = Number.isFinite(p.vitality_score) ? p.vitality_score : 1.0;
+    if(state === 'EXPECTANT' || vit <= 0){
+      return { cls: 'timer-expectant', label: 'EXPECTANT', color: '#85938a', barColor: '#55615a', isPulsing: false };
+    }
+    if(state === 'EXTREME_IMMINENT_COLLAPSE' || vit < 0.20){
+      return { cls: 'timer-pulse', label: 'IMMINENT COLLAPSE', color: '#ff3322', barColor: '#ff2211', isPulsing: true };
+    }
+    if(state === 'CRITICAL_WINDOW' || vit < 0.50){
+      return { cls: 'timer-red', label: 'CRITICAL WINDOW', color: '#ff746c', barColor: '#e45e57', isPulsing: false };
+    }
+    if(state === 'DEGRADING' || vit < 0.80){
+      return { cls: 'timer-yellow', label: 'DEGRADING', color: '#f2c36b', barColor: '#d79c3c', isPulsing: false };
+    }
+    return { cls: 'timer-green', label: 'STABLE', color: '#80d6a0', barColor: '#4c9a68', isPulsing: false };
+  }
+
+  function getCountdownText(p){
+    const rem = p._remainingSeconds !== undefined ? p._remainingSeconds : (p.time_to_critical_seconds ?? 0);
+    if(rem <= 0) return '⏱️ WINDOW EXPIRED';
+    return `⏱️ ${formatSeconds(rem)} until critical`;
+  }
+
+  function initMap(){
+    map=L.map('map',{zoomControl:false}).setView([20.2961,85.8245],13);
+    L.control.zoom({position:'bottomright'}).addTo(map);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap'}).addTo(map);
+    markersLayer=L.layerGroup().addTo(map); floodContoursLayer=L.layerGroup().addTo(map);
+  }
+
+  function showToast(message){const el=$('toast');el.textContent=message;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),2600)}
+  function escapeHtml(value){return String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]))}
+  function severityClass(s){return ({2:'badge-red',1:'badge-yellow',0:'badge-green'})[s]||''}
+
+  async function refreshData(){
+    $('refresh-btn').disabled=true;$('last-updated').textContent='Updating…';
+    try{
+      const [packetRes,summaryRes]=await Promise.all([fetch('/api/v1/victims'),fetch('/api/triage/summary')]);
+      if(!packetRes.ok||!summaryRes.ok)throw new Error('Server returned an error');
+      const [packetData,summary]=await Promise.all([packetRes.json(),summaryRes.json()]);
+      const newPackets = packetData.victims||packetData.packets||[];
+      newPackets.forEach(p => {
+        p._remainingSeconds = Number.isFinite(p.time_to_critical_seconds) ? p.time_to_critical_seconds : 0;
+      });
+      allPackets = newPackets;
+      $('m-total').textContent=summary.total_alerts??allPackets.length;$('m-critical').textContent=summary.red_critical??0;$('m-delayed').textContent=summary.yellow_delayed??0;$('m-minor').textContent=summary.green_minor??0;$('m-expectant').textContent=summary.black_expectant??0;$('m-headcount').textContent=summary.total_headcount??0;$('m-trapped').textContent=summary.trapped_count??0;
+      renderMap();renderQueue();$('last-updated').textContent=`Updated ${new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'})}`;
+    }catch(err){console.error('Failed to load triage telemetry:',err);$('last-updated').textContent='Connection issue';showToast('Could not refresh reports. Retrying automatically.')}finally{$('refresh-btn').disabled=false}
+  }
+
+  function tickCountdowns(){
+    let updatedAny = false;
+    allPackets.forEach(p => {
+      if(p._remainingSeconds !== undefined && p._remainingSeconds > 0){
+        p._remainingSeconds = Math.max(0, p._remainingSeconds - 1);
+        if(p.effective_horizon_seconds && p.effective_horizon_seconds > 0){
+          p.vitality_score = Math.max(0.0, Math.min(1.0, p._remainingSeconds / p.effective_horizon_seconds));
+        }
+        if(p._remainingSeconds <= 0){
+          p.survival_state = 'EXPECTANT';
+        } else if(p.vitality_score < 0.20){
+          p.survival_state = 'EXTREME_IMMINENT_COLLAPSE';
+        } else if(p.vitality_score < 0.50){
+          p.survival_state = 'CRITICAL_WINDOW';
+        } else if(p.vitality_score < 0.80){
+          p.survival_state = 'DEGRADING';
+        } else {
+          p.survival_state = 'STABLE';
+        }
+        updatedAny = true;
+      }
+    });
+
+    if(updatedAny){
+      allPackets.forEach(pkt => {
+        const dev = pkt.device_hash;
+        const vStyle = getVitalityStyle(pkt);
+        const timerText = getCountdownText(pkt);
+        const vitPct = Math.round((pkt.vitality_score ?? 1.0) * 100);
+
+        // Update timer elements in queue and map popups
+        document.querySelectorAll(`.vitality-timer[data-device="${dev}"]`).forEach(el => {
+          el.textContent = timerText;
+          el.className = `vitality-timer ${vStyle.cls}`;
+        });
+
+        // Update card pulse and progress bar
+        const card = document.querySelector(`.triage-card[data-device="${dev}"]`);
+        if(card){
+          card.classList.toggle('pulse-critical', !!vStyle.isPulsing);
+          const bar = card.querySelector('.vitality-bar');
+          if(bar){
+            bar.style.width = `${vitPct}%`;
+            bar.style.background = vStyle.barColor;
+          }
+        }
+
+        // Update map marker dynamically
+        if(pkt._marker){
+          pkt._marker.setStyle({
+            fillColor: vStyle.color,
+            radius: (vStyle.isPulsing || pkt.severity === 2) ? 10 : 7,
+            weight: (vStyle.isPulsing || pkt.severity === 2) ? 3 : 2
+          });
+        }
+      });
+    }
+  }
+
+  function renderMap(){
+    markersLayer.clearLayers();
+    allPackets.forEach(p=>{
+      const vStyle = getVitalityStyle(p);
+      const isCritical = (p.survival_state === 'EXTREME_IMMINENT_COLLAPSE' || p.severity === 2);
+      const radius = isCritical ? 10 : 7;
+      const marker = L.circleMarker([p.latitude, p.longitude], {
+        radius: radius,
+        fillColor: vStyle.color,
+        color: '#f3f5ed',
+        weight: isCritical ? 3 : 2,
+        fillOpacity: 0.95
+      });
+      const vitPct = Math.round((p.vitality_score ?? 1.0) * 100);
+      const timerText = getCountdownText(p);
+      marker.bindPopup(`
+        <strong style="color:${vStyle.color}">${escapeHtml(p.severity_label)} · ${escapeHtml(p.disaster_label)}</strong>
+        <div class="vitality-timer ${vStyle.cls}" data-device="${escapeHtml(p.device_hash)}" style="margin:6px 0;display:block;text-align:center">${timerText}</div>
+        <div><b>Trauma:</b> ${escapeHtml(p.trauma_type || 'Unspecified')} · <b>Vitality:</b> ${vitPct}%</div>
+        <div><b>State:</b> ${escapeHtml(vStyle.label)} · <b>Urgency:</b> ${escapeHtml(p.urgency_index ?? '—')}/100 (#${p.urgency_rank ?? '—'})</div>
+        <div>People: ${escapeHtml(p.total_headcount)} · Battery: ${escapeHtml(p.battery_pct)}% · Alt: ${escapeHtml(p.altitude_m)} m ${p.is_trapped?'· <b>Trapped</b>':''}</div>
+        <p style="margin-top:6px;font-size:11px;color:#bfcbc1">${escapeHtml(p.note||'No note provided')}</p>
+      `);
+      markersLayer.addLayer(marker);
+      p._marker=marker;
+    });
+    $('map-count').textContent=`${allPackets.length} location${allPackets.length===1?'':'s'}`;
+    if(allPackets.length){const valid=allPackets.filter(p=>Number.isFinite(+p.latitude)&&Number.isFinite(+p.longitude));if(valid.length){const bounds=L.latLngBounds(valid.map(p=>[p.latitude,p.longitude]));if(!map._hasFit){map.fitBounds(bounds.pad(.18),{maxZoom:14});map._hasFit=true}}}
+  }
+
+  function renderQueue(){
+    const query=$('search').value.trim().toLowerCase();
+    const filtered=allPackets.filter(p=>{
+      const matchFilter=activeFilter==='all'||(activeFilter==='trapped'?!!p.is_trapped:String(p.severity)===activeFilter);
+      const haystack=[p.severity_label,p.disaster_label,p.trauma_type,p.survival_state,p.note,p.source_channel,p.device_hash,...Object.keys(p.medical_flags||{}).filter(k=>p.medical_flags[k])].join(' ').toLowerCase();return matchFilter&&(!query||haystack.includes(query));
+    });
+    $('queue-count').textContent=`${filtered.length} report${filtered.length===1?'':'s'}`;
+    const container=$('queue-container');container.replaceChildren();
+    if(!filtered.length){const empty=document.createElement('div');empty.className='empty';empty.textContent=allPackets.length?'No reports match these filters.':'No SOS reports received yet. New reports will appear here automatically.';container.appendChild(empty);return}
+    filtered.forEach(p=>{
+      const vStyle = getVitalityStyle(p);
+      const pulseCls = vStyle.isPulsing ? ' pulse-critical' : '';
+      const vitPct = Math.round((p.vitality_score ?? 1.0) * 100);
+      const timerText = getCountdownText(p);
+
+      const card=document.createElement('article');
+      card.className=`triage-card sev-${p.severity}${pulseCls}`;
+      card.setAttribute('data-device', p.device_hash || '');
+      card.tabIndex=0;card.setAttribute('role','button');card.setAttribute('aria-label',`${p.severity_label} ${p.disaster_label}, ${p.total_headcount} people`);
+      
+      const flags=p.medical_flags||{};const tags=[];
+      if(flags.bleeding)tags.push(['ARTERIAL BLEED',true]);
+      if(flags.oxygen_needed)tags.push(['AIRWAY / O2',true]);
+      if(flags.insulin)tags.push(['INSULIN',true]);
+      if(flags.dialysis)tags.push(['DIALYSIS',true]);
+      if(flags.crush_injury)tags.push(['CRUSH INJURY',true]);
+      if(flags.snakebite)tags.push(['SNAKEBITE',true]);
+      if(flags.pregnancy)tags.push(['PREGNANCY',false]);
+      if(flags.fracture)tags.push(['FRACTURE',false]);
+
+      card.innerHTML=`
+        <div class="card-top">
+          <span class="badge ${severityClass(p.severity)}">${escapeHtml(p.severity_label)}</span>
+          <span class="vitality-timer ${vStyle.cls}" data-device="${escapeHtml(p.device_hash)}">${timerText}</span>
+          <span class="card-meta">🔋 ${escapeHtml(p.battery_pct)}% · 👥 ${escapeHtml(p.total_headcount)}</span>
+        </div>
+        <div class="vitality-bar-wrap">
+          <div class="vitality-bar" style="width:${vitPct}%;background:${vStyle.barColor}"></div>
+        </div>
+        <div class="card-place" style="margin-top:7px">
+          ${escapeHtml(p.disaster_label)} · ${p.is_trapped?'Trapped under debris':'Surface'} 
+          <span style="color:var(--muted);font-weight:500">(${escapeHtml(p.altitude_m)} m)</span>
+        </div>
+        <div style="font-size:11px;color:var(--soft);margin-top:3px">
+          Trauma: <b style="color:var(--text)">${escapeHtml(p.trauma_type || 'Unspecified')}</b> · Urgency: <b style="color:${vStyle.color}">${escapeHtml(p.urgency_index ?? '—')}/100</b> (Rank #${p.urgency_rank ?? '—'})
+        </div>
+        ${tags.length?`<div class="med-flags">${tags.map(([t,u])=>`<span class="med-tag ${u?'urgent':''}">${t}</span>`).join('')}</div>`:''}
+        <div class="card-note">${p.note?`“${escapeHtml(p.note)}”`:'No survivor note'}</div>
+        <div class="card-foot"><span>${escapeHtml(p.source_channel||'Unknown source')}</span><span>${escapeHtml(p.device_hash||'')}</span></div>
+      `;
+      const focus=()=>{if(p._marker){map.flyTo([p.latitude,p.longitude],15,{duration:.6});p._marker.openPopup()}};card.addEventListener('click',focus);card.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();focus()}});container.appendChild(card);
+    });
+  }
+
+  async function showMissionPlan(){
+    const button=$('dispatch-btn');button.disabled=true;button.textContent='Optimizing routes…';
+    try{
+      let plan = [];
+      let res = await fetch('/api/v1/dispatch_optimize', {method:'POST', headers:{'Content-Type':'application/json'}, body:'{}'});
+      if(!res.ok){
+        res = await fetch('/api/triage/mission_plan');
+      }
+      if(!res.ok) throw new Error('Mission planning failed');
+      const data = await res.json();
+      const body=$('mission-body');body.replaceChildren();
+
+      const teamAssignments = data.team_assignments || {};
+      const teamKeys = Object.keys(teamAssignments);
+
+      if(!teamKeys.length && !data.mission_plan){
+        body.innerHTML='<div class="empty">No survivor alerts are buffered for dispatch planning.</div>';
+        if(routePolyline){map.removeLayer(routePolyline);routePolyline=null;}
+      } else if(teamKeys.length > 0){
+        let allCoords = [];
+        let html = `<div style="margin-bottom:14px;padding:10px 14px;background:#202c28;border-radius:10px;font-size:12px;display:flex;justify-content:space-between">
+          <span>Lives Saved: <b style="color:var(--green)">${data.total_saved} / ${data.total_victims} (${data.lives_saved_percentage}%)</b></span>
+          <span>Teams Deployed: <b>${teamKeys.length}</b></span>
+        </div>`;
+        
+        teamKeys.forEach(tId => {
+          const t = teamAssignments[tId];
+          const route = t.route || [];
+          route.forEach(wp => allCoords.push(wp.coordinates));
+          html += `<div style="margin-top:14px;border:1px solid var(--line);border-radius:12px;padding:12px;background:#16201e">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+              <div><strong style="color:var(--mint)">${escapeHtml(t.team_id)}</strong> <span style="font-size:11px;color:var(--muted)">(${escapeHtml(t.team_type)})</span></div>
+              <div style="font-size:11px;color:var(--muted)">ETA Total: <b>${escapeHtml(t.total_duration_formatted)}</b> · Saved: <b>${t.saved_count}</b></div>
+            </div>`;
+          if(!route.length){
+            html += `<div style="font-size:11px;color:var(--soft);padding:6px 0">No stops assigned (Standby reserve)</div>`;
+          } else {
+            route.forEach((wp, idx) => {
+              const statusColor = wp.saved ? 'var(--green)' : 'var(--red)';
+              html += `<div class="mission" style="padding:8px 0">
+                <div class="mission-number">${idx+1}</div>
+                <div>
+                  <div class="mission-title">${escapeHtml(wp.trauma_type)} → <span style="color:${statusColor}">${escapeHtml(wp.survival_status_at_arrival)}</span></div>
+                  <div class="mission-sub">ETA: <b>${escapeHtml(wp.eta_formatted)}</b> · Margin: <b>${escapeHtml(formatSeconds(wp.time_to_critical_at_arrival))}</b> · People: ${escapeHtml(wp.headcount)}</div>
+                </div>
+                <div class="mission-distance">${escapeHtml(wp.leg_distance_m)} m</div>
+              </div>`;
+            });
+          }
+          html += `</div>`;
+        });
+        body.innerHTML = html;
+        if(routePolyline) map.removeLayer(routePolyline);
+        if(allCoords.length > 0){
+          routePolyline=L.polyline(allCoords,{color:'#58d68d',weight:4,dashArray:'7 8',opacity:.9}).addTo(map);
+          map.fitBounds(routePolyline.getBounds().pad(.2),{maxZoom:14});
+        }
+      } else if(data.mission_plan){
+        const plan = data.mission_plan;
+        const coordinates=plan.map(p=>p.coordinates);
+        if(routePolyline)map.removeLayer(routePolyline);
+        routePolyline=L.polyline(coordinates,{color:'#bd655f',weight:4,dashArray:'7 8',opacity:.9}).addTo(map);
+        map.fitBounds(routePolyline.getBounds().pad(.2),{maxZoom:14});
+        plan.forEach((p,i)=>{
+          const row=document.createElement('div');row.className='mission';
+          row.innerHTML=`<div class="mission-number">${i+1}</div><div><div class="mission-title">${escapeHtml(p.recommended_unit||'Rescue unit')} → ${escapeHtml(p.severity_label||'Survivor cluster')}</div><div class="mission-sub">${escapeHtml(p.disaster_label||'Rescue location')} · ${escapeHtml(p.total_headcount??'')} people</div></div><div class="mission-distance">${escapeHtml(p.leg_distance_m??'—')} m</div>`;
+          body.appendChild(row);
+        });
+      }
+      $('mission-modal').classList.add('open');$('close-modal').focus();
+    }catch(err){console.error(err);showToast('Could not calculate dispatch plan.')}finally{button.disabled=false;button.innerHTML='Plan dispatch <span aria-hidden="true">↗</span>'}
+  }
+
+  let floodDebounce;
+  async function updateFloodContours(level){$('water-label').textContent=`${level} m`;clearTimeout(floodDebounce);floodDebounce=setTimeout(async()=>{try{const res=await fetch(`/api/dem/flood_contours?water_level=${encodeURIComponent(level)}`);if(!res.ok)throw new Error('Flood layer unavailable');const data=await res.json();floodContoursLayer.clearLayers();data.contours.forEach(cell=>{L.rectangle(cell.bounds,{color:cell.color,fillColor:cell.color,fillOpacity:cell.opacity,weight:.35}).bindPopup(`<b>Water depth:</b> ${escapeHtml(cell.water_depth_m)} m · ${escapeHtml(cell.depth_class)}<br><b>Ground elevation:</b> ${escapeHtml(cell.elevation_m)} m`).addTo(floodContoursLayer)});if($('flood-btn').getAttribute('aria-pressed')==='true'&&!map.hasLayer(floodContoursLayer))floodContoursLayer.addTo(map)}catch(err){console.error(err);showToast('Flood terrain layer is unavailable')}} ,160)}
+  window.addEventListener('DOMContentLoaded',()=>{
+    initMap();refreshData();updateFloodContours(24);refreshTimer=setInterval(refreshData,10000);
+    countdownTimer=setInterval(tickCountdowns, 1000);
+    $('refresh-btn').addEventListener('click',refreshData);$('dispatch-btn').addEventListener('click',showMissionPlan);$('search').addEventListener('input',renderQueue);$('water-slider').addEventListener('input',e=>updateFloodContours(e.target.value));
+    document.querySelectorAll('.filter').forEach(btn=>btn.addEventListener('click',()=>{document.querySelectorAll('.filter').forEach(b=>b.classList.remove('active'));btn.classList.add('active');activeFilter=btn.dataset.filter;renderQueue()}));
+    $('flood-btn').addEventListener('click',e=>{const enabled=e.currentTarget.getAttribute('aria-pressed')!=='true';e.currentTarget.setAttribute('aria-pressed',String(enabled));e.currentTarget.textContent=enabled?'Flood layer on':'Flood layer off';if(enabled)floodContoursLayer.addTo(map);else map.removeLayer(floodContoursLayer)});
+    $('close-modal').addEventListener('click',()=>$('mission-modal').classList.remove('open'));$('mission-modal').addEventListener('click',e=>{if(e.target===$('mission-modal'))$('mission-modal').classList.remove('open')});document.addEventListener('keydown',e=>{if(e.key==='Escape')$('mission-modal').classList.remove('open')});
+    window.addEventListener('beforeunload',()=>{clearInterval(refreshTimer);clearInterval(countdownTimer);});
+  });
+</script>
+</body>
+</html>
