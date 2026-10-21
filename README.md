@@ -67,6 +67,7 @@ graph TD
 
 ```
 d:\New folder (5)\
+├── main.py                            # [NEW] Master Orchestrator (All 4 Layers Combined)
 ├── core/
 │   ├── sos_packet.py                  # Strict 120-Byte Binary Packet Codec & CRC16-CCITT
 │   ├── triage_extractor.py            # Indic Vernacular Dialect Extractor (Qwen/Llama SLM logic)
@@ -88,6 +89,7 @@ d:\New folder (5)\
 │   └── web/
 │       └── index.html                 # Offline Interactive Tactical GIS Dashboard with Live Ticking
 ├── tests/
+│   ├── test_unified_runner.py         # [NEW] Master orchestrator integration test (4 tests)
 │   ├── test_disaster_mesh.py          # Protocol & hardware unit tests
 │   ├── test_advanced_features.py      # Vernacular extraction, RAG, & routing tests
 │   ├── test_cryo_sleep.py             # [NEW] Cryo-sleep power & battery math tests (15 tests)
@@ -103,26 +105,25 @@ d:\New folder (5)\
 
 ## 🛠️ How to Run
 
-### 1. Run Complete Automated Unit Tests
+### 🌟 1. Single Master Run (All Layers Combined)
+```bash
+python main.py
+```
+*Launches the entire system in one unified command:*
+* **Layer D**: Launches the Tactical Incident Command Station & GIS map on `http://localhost:8080`.
+* **Layer C**: Launches the Zero-Install Captive Portal & Offline Micro-PWA on `http://localhost:8082`.
+* **Layer A & B**: Executes live Survivor Edge Nodes (Indic Voice, SAR-Tap seismic rebar knocks, Cryo-Sleep ~12-day horizon, BLE 5.0, ultrasonic acoustic chirp).
+* **Layer C**: Derives 3D sub-surface burial depth & excavation coordinates via 4-receiver GCC-PHAT TDoA multilateration.
+* **Layer D**: Calculates real-time dynamic golden-hour survival countdowns & multi-team dispatch routing.
+* Automatically opens your browser and starts an interactive command console!
+
+### 2. Run Complete Automated Unit Tests
 ```bash
 python -m unittest discover tests
 ```
-*All 117 unit tests pass with zero regressions across all 5 breakthrough engines.*
+*All 121 unit tests pass with zero regressions across all engines, transports, and unified runners.*
 
-### 2. Simulate the Survivor Edge Node (Layer A)
-```bash
-python survivor_edge_node.py
-```
-*Demonstrates voice input triage, 120-byte compression, acoustic chirps, Cryo-Sleep power budgeting (~12 days projected life), and SAR-Tap non-vocal seismic distress decoding.*
-
-### 3. Simulate Multi-Survivor Zero-Grid Mesh & 3D TDoA (Layer B & C)
-```bash
-python demo_simulation.py
-```
-*Simulates flood rooftop victims, ground floor victims, and a survivor buried under 2.5m concrete rubble localized via 4-mule ultrasonic GCC-PHAT 3D triangulation.*
-
-### 4. Launch Tactical Incident Command Dashboard (Layer D)
-```bash
-python dashboard/server.py
-```
-*Open http://localhost:8080 in your browser to view the interactive map with real-time ticking golden-hour countdowns and dynamic dispatch route optimizer.*
+### 3. Individual Subsystem Runs (Optional)
+* Edge Node Simulation: `python survivor_edge_node.py`
+* Multi-Survivor & 3D TDoA Mesh: `python demo_simulation.py`
+* Tactical Command Server: `python dashboard/server.py`
